@@ -5,6 +5,8 @@ import '../../providers/recipe_provider.dart';
 import '../../providers/favorite_provider.dart';
 import '../../widgets/recipe_card.dart';
 import '../../widgets/category_card.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/empty_state.dart';
 import '../../utils/constants.dart';
 import '../../app/routes.dart';
 
@@ -18,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -34,8 +37,81 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
+
+  void _scrollToRecipes() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        320,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _showNotificationsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.notifications_rounded, color: AppColors.primary),
+              SizedBox(width: 10),
+              Text('Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildNotificationItem(
+                'New Recipe Added! 🍲',
+                'Chef Raj published Butter Paneer in Dinner.',
+                '5m ago',
+              ),
+              const Divider(),
+              _buildNotificationItem(
+                'Welcome to Recipe Hub! 👋',
+                'Explore hundreds of delicious recipes at home.',
+                '1h ago',
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationItem(String title, String subtitle, String time) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(time, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: RefreshIndicator(
           onRefresh: () => recipeProvider.fetchRecipes(),
           child: SingleChildScrollView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             child: Column(
@@ -83,14 +160,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary, size: 22),
-                        onPressed: () {},
+                        onPressed: _showNotificationsDialog,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
-                // Search Bar ("Search any recipes")
+                // Search Bar ("Search any recipes") with Live Clear
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -129,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Hero Promo Banner Card (Matching Reference Image 2)
+                // Hero Promo Banner Card with Working "Explore" Button
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -161,7 +238,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _searchController.clear();
+                                recipeProvider.setSearchQuery('');
+                                recipeProvider.setCategory('All');
+                                _scrollToRecipes();
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: AppColors.textPrimary,
@@ -198,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Categories Centered Title (Matching Reference Image 2)
+                // Categories Centered Title
                 const Center(
                   child: Text(
                     'Categories',
@@ -227,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Quick & Easy Section Header (Matching Reference Image 2)
+                // Quick & Easy Section Header with Working "View all" Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -240,7 +322,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        _searchController.clear();
+                        recipeProvider.setSearchQuery('');
+                        recipeProvider.setCategory('All');
+                        _scrollToRecipes();
+                      },
                       child: const Text(
                         'View all',
                         style: TextStyle(
@@ -254,91 +341,66 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                // Recipe Grid (Matching Reference Image 2)
-                recipeProvider.isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: Center(
-                          child: CircularProgressIndicator(color: AppColors.primary),
-                        ),
-                      )
-                    : recipeProvider.filteredRecipes.isEmpty
-                        ? Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(32),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              children: [
-                                const Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'No recipes found',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                const Text(
-                                  'Try searching for something else or change category',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                                ),
-                                const SizedBox(height: 16),
-                                TextButton(
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    recipeProvider.setSearchQuery('');
-                                    recipeProvider.setCategory('All');
-                                  },
-                                  child: const Text('Clear Filters', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                            ),
-                          )
-                        : GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.78,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                            ),
-                            itemCount: recipeProvider.filteredRecipes.length,
-                            itemBuilder: (context, index) {
-                              final recipe = recipeProvider.filteredRecipes[index];
-                              final isFav = favoriteProvider.isFavorite(recipe.id);
-                              final updatedRecipe = recipe.copyWith(isFavorite: isFav);
+                // Recipe Grid / Loading / Error / Empty States using LoadingWidget & EmptyState
+                if (recipeProvider.isLoading)
+                  const LoadingWidget(message: 'Loading recipes...')
+                else if (recipeProvider.errorMessage != null)
+                  EmptyState.error(
+                    title: 'Unable to load recipes',
+                    message: recipeProvider.errorMessage!,
+                    onRetry: () => recipeProvider.fetchRecipes(),
+                  )
+                else if (recipeProvider.filteredRecipes.isEmpty)
+                  EmptyState(
+                    title: 'No recipes found',
+                    message: 'Try searching for something else or changing categories.',
+                    onRetry: () {
+                      _searchController.clear();
+                      recipeProvider.setSearchQuery('');
+                      recipeProvider.setCategory('All');
+                    },
+                    buttonText: 'Clear Filters',
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.78,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                    ),
+                    itemCount: recipeProvider.filteredRecipes.length,
+                    itemBuilder: (context, index) {
+                      final recipe = recipeProvider.filteredRecipes[index];
+                      final isFav = favoriteProvider.isFavorite(recipe.id);
+                      final updatedRecipe = recipe.copyWith(isFavorite: isFav);
 
-                              return RecipeCard(
-                                recipe: updatedRecipe,
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.recipeDetail,
-                                    arguments: updatedRecipe,
-                                  );
-                                },
-                                onFavoriteTap: () {
-                                  final uid = authProvider.userModel?.uid ?? '';
-                                  favoriteProvider.toggleFavorite(uid, recipe.id);
-                                },
-                              );
-                            },
-                          ),
+                      return RecipeCard(
+                        recipe: updatedRecipe,
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.recipeDetail,
+                            arguments: updatedRecipe,
+                          );
+                        },
+                        onFavoriteTap: () {
+                          final uid = authProvider.userModel?.uid ?? '';
+                          favoriteProvider.toggleFavorite(uid, recipe.id);
+                        },
+                      );
+                    },
+                  ),
               ],
             ),
           ),
         ),
       ),
-      // Floating Action Button (+) at bottom right (Matching Reference Image 2)
+      // Floating Action Button (+) with working Add Recipe screen
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.addEditRecipe),
         backgroundColor: AppColors.primary,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

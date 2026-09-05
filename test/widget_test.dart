@@ -10,7 +10,7 @@ void main() {
         'description': 'Fluffy pancakes',
         'imageUrl': 'https://example.com/pancake.jpg',
         'category': 'Breakfast',
-        'ingredients': ['Flour', 'Milk', 'Eggs'],
+        'ingredients': ['Flour: 200 g', 'Milk: 100 ml'],
         'instructions': ['Mix ingredients', 'Cook on skillet'],
         'cookingTime': 15,
         'servings': 2,
@@ -24,9 +24,33 @@ void main() {
       expect(recipe.id, 'test_id_1');
       expect(recipe.title, 'Test Pancake');
       expect(recipe.category, 'Breakfast');
-      expect(recipe.ingredients.length, 3);
+      expect(recipe.ingredients.length, 2);
       expect(recipe.cookingTime, 15);
       expect(recipe.servings, 2);
+    });
+
+    test('Recipe.getScaledIngredients scales ingredient quantities correctly', () {
+      final recipe = Recipe(
+        id: 'paneer_1',
+        title: 'Butter Paneer',
+        description: 'Test description',
+        imageUrl: '',
+        category: 'Dinner',
+        ingredients: ['Paneer: 400 g', 'Butter: 100 g'],
+        instructions: ['Cook'],
+        cookingTime: 25,
+        servings: 1,
+        difficulty: 'Easy',
+        createdBy: 'Chef',
+      );
+
+      final scaledFor2 = recipe.getScaledIngredients(2);
+      expect(scaledFor2[0], 'Paneer: 800 g');
+      expect(scaledFor2[1], 'Butter: 200 g');
+
+      final scaledFor3 = recipe.getScaledIngredients(3);
+      expect(scaledFor3[0], 'Paneer: 1200 g');
+      expect(scaledFor3[1], 'Butter: 300 g');
     });
 
     test('UserModel.fromMap creates valid UserModel instance', () {

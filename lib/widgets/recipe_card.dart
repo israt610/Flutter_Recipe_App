@@ -34,24 +34,47 @@ class RecipeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Image Stack with Badges (Matching Reference Image 2)
+            // Image Stack with Badges & Safe Image Loading/Error Handling
             Stack(
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: AspectRatio(
                     aspectRatio: 1.35,
-                    child: Image.network(
-                      recipe.imageUrl,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: AppColors.primaryLight.withValues(alpha: 0.2),
-                        child: const Center(
-                          child: Icon(Icons.restaurant, size: 32, color: AppColors.primary),
-                        ),
-                      ),
-                    ),
+                    child: recipe.imageUrl.trim().isEmpty
+                        ? Container(
+                            color: AppColors.primaryLight.withValues(alpha: 0.15),
+                            child: const Center(
+                              child: Icon(Icons.restaurant_rounded, size: 36, color: AppColors.primary),
+                            ),
+                          )
+                        : Image.network(
+                            recipe.imageUrl,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: AppColors.background,
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: AppColors.primaryLight.withValues(alpha: 0.15),
+                              child: const Center(
+                                child: Icon(Icons.restaurant_rounded, size: 36, color: AppColors.primary),
+                              ),
+                            ),
+                          ),
                   ),
                 ),
                 // Category Badge Top Left
@@ -101,7 +124,7 @@ class RecipeCard extends StatelessWidget {
                           child: Icon(
                             recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
                             size: 15,
-                            color: recipe.isFavorite ? AppColors.error : AppColors.error,
+                            color: AppColors.error,
                           ),
                         ),
                       ),
@@ -110,7 +133,7 @@ class RecipeCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Title & Info Row Below Image (Matching Reference Image 2)
+            // Title & Info Row Below Image
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               child: Column(
