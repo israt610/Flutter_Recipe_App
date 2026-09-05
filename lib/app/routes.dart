@@ -5,6 +5,7 @@ import '../screens/auth/register_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/search/search_screen.dart';
 import '../screens/recipe/recipe_detail_screen.dart';
+import '../screens/recipe/add_edit_recipe_screen.dart';
 import '../screens/favorites/favorites_screen.dart';
 import '../screens/profile/profile_screen.dart';
 
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String search = '/search';
   static const String recipeDetail = '/recipe-detail';
+  static const String addEditRecipe = '/add-edit-recipe';
   static const String favorites = '/favorites';
   static const String profile = '/profile';
 
@@ -34,6 +36,11 @@ class AppRoutes {
       case recipeDetail:
         return MaterialPageRoute(
           builder: (_) => const RecipeDetailScreen(),
+          settings: settings,
+        );
+      case addEditRecipe:
+        return MaterialPageRoute(
+          builder: (_) => const AddEditRecipeScreen(),
           settings: settings,
         );
       case favorites:
