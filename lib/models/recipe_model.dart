@@ -9,9 +9,11 @@ class Recipe {
   final List<String> ingredients;
   final List<String> instructions;
   final int cookingTime; // in minutes
+  final int calories; // e.g. 140 Cal
   final int servings;
   final String difficulty; // Easy, Medium, Hard
   final double rating;
+  final int reviewCount;
   final String createdBy;
   final DateTime createdAt;
   final bool isFavorite;
@@ -25,9 +27,11 @@ class Recipe {
     required this.ingredients,
     required this.instructions,
     required this.cookingTime,
+    this.calories = 140,
     required this.servings,
     required this.difficulty,
-    this.rating = 0.0,
+    this.rating = 4.5,
+    this.reviewCount = 20,
     required this.createdBy,
     DateTime? createdAt,
     this.isFavorite = false,
@@ -43,9 +47,11 @@ class Recipe {
       ingredients: List<String>.from(map['ingredients'] ?? []),
       instructions: List<String>.from(map['instructions'] ?? []),
       cookingTime: (map['cookingTime'] as num?)?.toInt() ?? 0,
+      calories: (map['calories'] as num?)?.toInt() ?? 140,
       servings: (map['servings'] as num?)?.toInt() ?? 1,
       difficulty: map['difficulty'] ?? 'Easy',
-      rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
+      rating: (map['rating'] as num?)?.toDouble() ?? 4.5,
+      reviewCount: (map['reviewCount'] as num?)?.toInt() ?? 20,
       createdBy: map['createdBy'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isFavorite: isFav,
@@ -61,9 +67,11 @@ class Recipe {
       'ingredients': ingredients,
       'instructions': instructions,
       'cookingTime': cookingTime,
+      'calories': calories,
       'servings': servings,
       'difficulty': difficulty,
       'rating': rating,
+      'reviewCount': reviewCount,
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
     };
@@ -78,9 +86,11 @@ class Recipe {
     List<String>? ingredients,
     List<String>? instructions,
     int? cookingTime,
+    int? calories,
     int? servings,
     String? difficulty,
     double? rating,
+    int? reviewCount,
     String? createdBy,
     DateTime? createdAt,
     bool? isFavorite,
@@ -94,9 +104,11 @@ class Recipe {
       ingredients: ingredients ?? this.ingredients,
       instructions: instructions ?? this.instructions,
       cookingTime: cookingTime ?? this.cookingTime,
+      calories: calories ?? this.calories,
       servings: servings ?? this.servings,
       difficulty: difficulty ?? this.difficulty,
       rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       isFavorite: isFavorite ?? this.isFavorite,

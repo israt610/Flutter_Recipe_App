@@ -9,7 +9,7 @@ import '../screens/favorites/favorites_screen.dart';
 import '../screens/profile/profile_screen.dart';
 
 class AppRoutes {
-  static const String splash = '/';
+  static const String splash = '/splash';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
@@ -20,6 +20,7 @@ class AppRoutes {
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case '/':
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case login:

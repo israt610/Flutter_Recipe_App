@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
@@ -11,6 +12,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    debugPrint('[LOGIN DEBUG] 3. AuthService signInWithEmailAndPassword started for: $email');
     return await _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password.trim(),
@@ -21,6 +23,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    debugPrint('[REGISTER DEBUG] 3. AuthService signUpWithEmailAndPassword started for: $email');
     return await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password.trim(),

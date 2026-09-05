@@ -43,10 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final recipeProvider = Provider.of<RecipeProvider>(context);
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
 
-    final userName = authProvider.userModel?.displayName.isNotEmpty == true
-        ? authProvider.userModel!.displayName
-        : 'Foodie';
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -58,51 +54,50 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row: User Greeting & Profile Icon
+                // Top Header Row: "What are you cooking today?" + Notification Bell in Rounded Box
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hello, $userName 👋',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'What would you like to cook today?',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      'What are you\ncooking today?',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        height: 1.25,
+                      ),
                     ),
-                    GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
-                      child: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-                        child: const Icon(Icons.person, color: AppColors.primary),
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary, size: 22),
+                        onPressed: () {},
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-                // Search Bar
+                // Search Bar ("Search any recipes")
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -111,12 +106,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: TextField(
                     controller: _searchController,
                     onChanged: (value) => recipeProvider.setSearchQuery(value),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Search recipes, ingredients...',
-                      prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                      hintText: 'Search any recipes',
+                      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary, size: 22),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear, size: 20),
+                              icon: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
                               onPressed: () {
                                 _searchController.clear();
                                 recipeProvider.setSearchQuery('');
@@ -126,24 +123,95 @@ class _HomeScreenState extends State<HomeScreen> {
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Hero Promo Banner Card (Matching Reference Image 2)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Cook the best\nrecipes at home',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppColors.textPrimary,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: const Text(
+                                'Explore',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80',
+                          width: 110,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.soup_kitchen, size: 60, color: Colors.white70),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Category Selector
-                const Text(
-                  'Categories',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                // Categories Centered Title (Matching Reference Image 2)
+                const Center(
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 SizedBox(
-                  height: 44,
+                  height: 46,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: AppConstants.categories.length,
@@ -159,30 +227,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Popular Recipes Section
+                // Quick & Easy Section Header (Matching Reference Image 2)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Popular Recipes',
+                      'Quick & Easy',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {},
+                    GestureDetector(
+                      onTap: () {},
                       child: const Text(
-                        'See All',
-                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                        'View all',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                // Recipes Grid / Loading / Empty State
+                // Recipe Grid (Matching Reference Image 2)
                 recipeProvider.isLoading
                     ? const Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
@@ -198,11 +270,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Column(
+                            child: Column(
                               children: [
-                                Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
-                                SizedBox(height: 12),
-                                Text(
+                                const Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
+                                const SizedBox(height: 12),
+                                const Text(
                                   'No recipes found',
                                   style: TextStyle(
                                     fontSize: 16,
@@ -210,11 +282,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: AppColors.textPrimary,
                                   ),
                                 ),
-                                SizedBox(height: 4),
-                                Text(
+                                const SizedBox(height: 6),
+                                const Text(
                                   'Try searching for something else or change category',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                ),
+                                const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    recipeProvider.setSearchQuery('');
+                                    recipeProvider.setCategory('All');
+                                  },
+                                  child: const Text('Clear Filters', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),
@@ -224,9 +305,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              childAspectRatio: 0.72,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.78,
+                              crossAxisSpacing: 14,
+                              mainAxisSpacing: 14,
                             ),
                             itemCount: recipeProvider.filteredRecipes.length,
                             itemBuilder: (context, index) {
@@ -255,45 +336,67 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textMuted,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          if (index == 1) {
-            Navigator.pushNamed(context, AppRoutes.search);
-          } else if (index == 2) {
-            Navigator.pushNamed(context, AppRoutes.favorites);
-          } else if (index == 3) {
-            Navigator.pushNamed(context, AppRoutes.profile);
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+      // Floating Action Button (+) at bottom right (Matching Reference Image 2)
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: AppColors.primary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, color: Colors.white, size: 26),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.textSecondary,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            if (index == 1) {
+              Navigator.pushNamed(context, AppRoutes.favorites);
+            } else if (index == 2) {
+              Navigator.pushNamed(context, AppRoutes.search);
+            } else if (index == 3) {
+              Navigator.pushNamed(context, AppRoutes.profile);
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_border_rounded),
+              activeIcon: Icon(Icons.favorite_rounded),
+              label: 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_rounded),
+              label: 'Meal Plan',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings_outlined),
+              activeIcon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }

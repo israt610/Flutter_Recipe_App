@@ -21,73 +21,88 @@ class RecipeCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Image Stack with Badges
+            // Image Stack with Badges (Matching Reference Image 2)
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: Image.network(
-                    recipe.imageUrl,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 150,
-                      color: Colors.grey.shade200,
-                      child: const Center(
-                        child: Icon(Icons.restaurant, size: 40, color: AppColors.textMuted),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: AspectRatio(
+                    aspectRatio: 1.35,
+                    child: Image.network(
+                      recipe.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: AppColors.primaryLight.withValues(alpha: 0.2),
+                        child: const Center(
+                          child: Icon(Icons.restaurant, size: 32, color: AppColors.primary),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                // Category Chip
+                // Category Badge Top Left
                 Positioned(
-                  top: 12,
-                  left: 12,
+                  top: 8,
+                  left: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       recipe.category,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-                // Favorite Icon
+                // Red Heart Icon inside White Circle Top Right
                 Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Material(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: onFavoriteTap,
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Icon(
-                          recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                          size: 18,
-                          color: recipe.isFavorite ? AppColors.error : AppColors.textSecondary,
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: onFavoriteTap,
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Icon(
+                            recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+                            size: 15,
+                            color: recipe.isFavorite ? AppColors.error : AppColors.error,
+                          ),
                         ),
                       ),
                     ),
@@ -95,9 +110,9 @@ class RecipeCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Details
+            // Title & Info Row Below Image (Matching Reference Image 2)
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -106,33 +121,44 @@ class RecipeCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.star, size: 16, color: AppColors.starRating),
-                      const SizedBox(width: 4),
-                      Text(
-                        recipe.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                      // Star & Rating / New Badge
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded, size: 14, color: AppColors.starRating),
+                          const SizedBox(width: 3),
+                          Text(
+                            recipe.rating > 0 ? recipe.rating.toStringAsFixed(1) : 'New',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: recipe.rating > 0 ? AppColors.textPrimary : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      const Icon(Icons.timer_outlined, size: 14, color: AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${recipe.cookingTime} min',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                      // Cooking Time Badge
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time_rounded, size: 12, color: AppColors.textSecondary),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${recipe.cookingTime}m',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

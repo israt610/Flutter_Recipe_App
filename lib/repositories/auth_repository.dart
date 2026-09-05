@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -27,7 +28,16 @@ class AuthRepository {
     );
 
     final uid = credential.user!.uid;
-    UserModel? userModel = await _firestoreService.getUserProfile(uid);
+    debugPrint('[LOGIN DEBUG] 7. AuthRepository reading Firestore user profile for UID: $uid');
+
+    UserModel? userModel;
+    try {
+      userModel = await _firestoreService.getUserProfile(uid);
+    } catch (e) {
+      debugPrint('[LOGIN DEBUG] Firestore getUserProfile exception caught: $e');
+    }
+
+    debugPrint('[LOGIN DEBUG] 8. Firestore user profile exists: ${userModel != null}');
 
     if (userModel == null) {
       userModel = UserModel(
@@ -35,7 +45,12 @@ class AuthRepository {
         email: email,
         displayName: credential.user?.displayName ?? email.split('@')[0],
       );
-      await _firestoreService.createUserProfile(userModel);
+      try {
+        await _firestoreService.createUserProfile(userModel);
+        debugPrint('[LOGIN DEBUG] Created Firestore user profile for UID: $uid');
+      } catch (e) {
+        debugPrint('[LOGIN DEBUG] Firestore createUserProfile exception caught: $e');
+      }
     }
 
     return userModel;
@@ -58,12 +73,23 @@ class AuthRepository {
       displayName: name,
     );
 
-    await _firestoreService.createUserProfile(userModel);
+    try {
+      await _firestoreService.createUserProfile(userModel);
+      debugPrint('[REGISTER DEBUG] Created Firestore user profile for UID: $uid');
+    } catch (e) {
+      debugPrint('[REGISTER DEBUG] Firestore createUserProfile exception caught: $e');
+    }
+
     return userModel;
   }
 
   Future<UserModel?> fetchUserProfile(String uid) async {
-    return await _firestoreService.getUserProfile(uid);
+    try {
+      return await _firestoreService.getUserProfile(uid);
+    } catch (e) {
+      debugPrint('[AUTH DEBUG] fetchUserProfile failed for UID $uid: $e');
+      return null;
+    }
   }
 
   Future<void> signOut() async {
