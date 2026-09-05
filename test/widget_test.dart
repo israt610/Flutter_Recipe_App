@@ -1,30 +1,47 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flutter_recipe/main.dart';
+import 'package:flutter_recipe/models/recipe_model.dart';
+import 'package:flutter_recipe/models/user_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Recipe Model Tests', () {
+    test('Recipe.fromMap creates valid Recipe instance', () {
+      final map = {
+        'title': 'Test Pancake',
+        'description': 'Fluffy pancakes',
+        'imageUrl': 'https://example.com/pancake.jpg',
+        'category': 'Breakfast',
+        'ingredients': ['Flour', 'Milk', 'Eggs'],
+        'instructions': ['Mix ingredients', 'Cook on skillet'],
+        'cookingTime': 15,
+        'servings': 2,
+        'difficulty': 'Easy',
+        'rating': 4.5,
+        'createdBy': 'Chef Test',
+      };
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      final recipe = Recipe.fromMap(map, 'test_id_1');
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      expect(recipe.id, 'test_id_1');
+      expect(recipe.title, 'Test Pancake');
+      expect(recipe.category, 'Breakfast');
+      expect(recipe.ingredients.length, 3);
+      expect(recipe.cookingTime, 15);
+      expect(recipe.servings, 2);
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('UserModel.fromMap creates valid UserModel instance', () {
+      final map = {
+        'email': 'test@example.com',
+        'displayName': 'Test User',
+        'favorites': ['recipe_1', 'recipe_2'],
+      };
+
+      final user = UserModel.fromMap(map, 'user_id_1');
+
+      expect(user.uid, 'user_id_1');
+      expect(user.email, 'test@example.com');
+      expect(user.displayName, 'Test User');
+      expect(user.favorites.length, 2);
+    });
   });
 }
