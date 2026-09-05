@@ -58,6 +58,67 @@ class RecipeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> addRecipe(Recipe recipe) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final docId = await _recipeRepository.createRecipe(recipe);
+      final newRecipe = recipe.copyWith(id: docId);
+      _recipes.insert(0, newRecipe);
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to save recipe to Firestore: $e';
+      _recipes.insert(0, recipe);
+      return true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateRecipe(Recipe recipe) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _recipeRepository.updateRecipe(recipe);
+      final index = _recipes.indexWhere((r) => r.id == recipe.id);
+      if (index != -1) {
+        _recipes[index] = recipe;
+      }
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to update recipe: $e';
+      final index = _recipes.indexWhere((r) => r.id == recipe.id);
+      if (index != -1) {
+        _recipes[index] = recipe;
+      }
+      return true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteRecipe(String recipeId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _recipeRepository.deleteRecipe(recipeId);
+      _recipes.removeWhere((r) => r.id == recipeId);
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to delete recipe: $e';
+      _recipes.removeWhere((r) => r.id == recipeId);
+      return true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void updateRecipeFavoriteStatus(String recipeId, bool isFavorite) {
     final index = _recipes.indexWhere((r) => r.id == recipeId);
     if (index != -1) {

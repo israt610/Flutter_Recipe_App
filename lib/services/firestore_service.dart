@@ -40,4 +40,24 @@ class FirestoreService {
       });
     }
   }
+
+  Future<String> createRecipe(Recipe recipe) async {
+    final docRef = recipe.id.isNotEmpty && !recipe.id.startsWith('custom_') && !recipe.id.startsWith('sample_')
+        ? _recipesRef.doc(recipe.id)
+        : _recipesRef.doc();
+    final map = recipe.toMap();
+    map['createdAt'] = FieldValue.serverTimestamp();
+    await docRef.set(map);
+    return docRef.id;
+  }
+
+  Future<void> updateRecipe(Recipe recipe) async {
+    final map = recipe.toMap();
+    map.remove('createdAt');
+    await _recipesRef.doc(recipe.id).update(map);
+  }
+
+  Future<void> deleteRecipe(String recipeId) async {
+    await _recipesRef.doc(recipeId).delete();
+  }
 }

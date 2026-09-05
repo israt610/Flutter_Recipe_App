@@ -10,7 +10,7 @@ class Recipe {
   final List<String> instructions;
   final int cookingTime; // in minutes
   final int calories; // e.g. 140 Cal
-  final int servings;
+  final int servings; // base servings
   final String difficulty; // Easy, Medium, Hard
   final double rating;
   final int reviewCount;
@@ -38,22 +38,55 @@ class Recipe {
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory Recipe.fromMap(Map<String, dynamic> map, String docId, {bool isFav = false}) {
+    num? parseNum(dynamic val) {
+      if (val == null) return null;
+      if (val is num) return val;
+      if (val is String) return num.tryParse(val);
+      return null;
+    }
+
+    List<String> parseStringList(dynamic val) {
+      if (val == null) return [];
+      if (val is List) {
+        return val.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList();
+      }
+      if (val is String && val.trim().isNotEmpty) {
+        if (val.contains('\n')) {
+          return val.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        }
+        if (val.contains(',')) {
+          return val.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        }
+        return [val.trim()];
+      }
+      return [];
+    }
+
+    DateTime parseDateTime(dynamic val) {
+      if (val == null) return DateTime.now();
+      if (val is Timestamp) return val.toDate();
+      if (val is DateTime) return val;
+      if (val is int) return DateTime.fromMillisecondsSinceEpoch(val);
+      if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+      return DateTime.now();
+    }
+
     return Recipe(
       id: docId,
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
-      imageUrl: map['imageUrl'] ?? '',
-      category: map['category'] ?? 'All',
-      ingredients: List<String>.from(map['ingredients'] ?? []),
-      instructions: List<String>.from(map['instructions'] ?? []),
-      cookingTime: (map['cookingTime'] as num?)?.toInt() ?? 0,
-      calories: (map['calories'] as num?)?.toInt() ?? 140,
-      servings: (map['servings'] as num?)?.toInt() ?? 1,
-      difficulty: map['difficulty'] ?? 'Easy',
-      rating: (map['rating'] as num?)?.toDouble() ?? 4.5,
-      reviewCount: (map['reviewCount'] as num?)?.toInt() ?? 20,
-      createdBy: map['createdBy'] ?? '',
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      title: map['title']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      imageUrl: map['imageUrl']?.toString() ?? '',
+      category: map['category']?.toString() ?? 'All',
+      ingredients: parseStringList(map['ingredients']),
+      instructions: parseStringList(map['instructions']),
+      cookingTime: parseNum(map['cookingTime'])?.toInt() ?? 0,
+      calories: parseNum(map['calories'])?.toInt() ?? 140,
+      servings: parseNum(map['servings'])?.toInt() ?? 1,
+      difficulty: map['difficulty']?.toString() ?? 'Easy',
+      rating: parseNum(map['rating'])?.toDouble() ?? 4.5,
+      reviewCount: parseNum(map['reviewCount'])?.toInt() ?? 20,
+      createdBy: map['createdBy']?.toString() ?? '',
+      createdAt: parseDateTime(map['createdAt']),
       isFavorite: isFav,
     );
   }
@@ -75,6 +108,37 @@ class Recipe {
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
     };
+  }
+
+  /// Calculates displayed ingredient amounts locally for dynamic targetServings
+  /// without modifying original Firestore ingredient list.
+  List<String> getScaledIngredients(int targetServings) {
+    if (targetServings < 1) targetServings = 1;
+    final int baseServings = servings > 0 ? servings : 1;
+    final double ratio = targetServings / baseServings;
+
+    return ingredients.map((ing) {
+      // Matches pattern: "Ingredient Name 400 g" or "Paneer: 400 g" or "400 g Paneer"
+      final RegExp numRegExp = RegExp(r'(\d+(?:\.\d+)?)');
+      final match = numRegExp.firstMatch(ing);
+
+      if (match == null) return ing;
+
+      final String? numStr = match.group(1);
+      if (numStr == null) return ing;
+      final double? baseVal = double.tryParse(numStr);
+      if (baseVal == null) return ing;
+
+      final double scaledVal = baseVal * ratio;
+      // Format to avoid floating point precision artifacts like 400.00000001
+      final String formattedVal = scaledVal % 1 == 0
+          ? scaledVal.toInt().toString()
+          : (scaledVal * 100).roundToDouble() / 100 == (scaledVal * 10).roundToDouble() / 10
+              ? scaledVal.toStringAsFixed(1)
+              : scaledVal.toStringAsFixed(2);
+
+      return ing.replaceRange(match.start, match.end, formattedVal);
+    }).toList();
   }
 
   Recipe copyWith({
