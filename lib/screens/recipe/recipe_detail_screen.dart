@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../models/recipe_model.dart';
 import '../../providers/favorite_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/recipe_provider.dart';
+import '../../app/routes.dart';
 import '../../utils/constants.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
@@ -15,28 +17,78 @@ class RecipeDetailScreen extends StatefulWidget {
 }
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
-  int _servings = 2;
+  bool _isInitialized = false;
+  late Recipe _item;
+  late int _servings;
   int _selectedRating = 5;
+  double _currentRating = 0.0;
+  int _currentReviewCount = 0;
   final TextEditingController _reviewController = TextEditingController();
+  final List<Map<String, dynamic>> _userReviews = [];
 
   @override
-  void initState() {
-    super.initState();
-    final Recipe item = widget.recipe ?? Recipe(
-      id: '0',
-      title: 'Mexican Pizza',
-      description: 'Crispy tortilla pizza topped with seasoned beans.',
-      imageUrl: '',
-      category: 'Dinner',
-      ingredients: [],
-      instructions: [],
-      cookingTime: 25,
-      calories: 140,
-      servings: 2,
-      difficulty: 'Easy',
-      createdBy: 'Chef',
-    );
-    _servings = item.servings > 0 ? item.servings : 2;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      final Object? args = ModalRoute.of(context)?.settings.arguments;
+      Recipe? recipeFromArgs;
+      if (widget.recipe != null) {
+        recipeFromArgs = widget.recipe;
+      } else if (args is Recipe) {
+        recipeFromArgs = args;
+      } else if (args is Map<String, dynamic>) {
+        try {
+          recipeFromArgs = Recipe.fromMap(args, args['id']?.toString() ?? 'recipe_id');
+        } catch (e) {
+          debugPrint('[RECIPE DETAIL DEBUG] Exception parsing Map arguments: $e');
+        }
+      }
+
+      _item = recipeFromArgs ?? Recipe(
+        id: 'sample_paneer_butter',
+        title: 'Butter Paneer',
+        description: 'Rich and creamy cottage cheese cubes simmered in a velvety tomato, butter, and cashew gravy.',
+        imageUrl: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=80',
+        category: 'Dinner',
+        ingredients: [
+          'Paneer: 400 g',
+          'Butter: 100 g',
+          'Heavy Cream: 50 ml',
+          'Tomato Puree: 200 g',
+          'Garam Masala: 1 tsp',
+        ],
+        instructions: [
+          'Cut paneer into bite-sized cubes.',
+          'Melt butter in a pan and saute tomato puree with spices until fragrant.',
+          'Add cream and cashew paste, gently simmer for 5 minutes.',
+          'Stir in paneer cubes and cook for 3 minutes before serving with naan.'
+        ],
+        cookingTime: 25,
+        calories: 320,
+        servings: 1,
+        difficulty: 'Easy',
+        rating: 4.8,
+        reviewCount: 32,
+        createdBy: 'Chef Raj',
+      );
+
+      _servings = _item.servings > 0 ? _item.servings : 1;
+      _currentRating = _item.rating;
+      _currentReviewCount = _item.reviewCount;
+      _isInitialized = true;
+
+      debugPrint('=== RECIPE DETAIL DEBUG ===');
+      debugPrint('id: ${_item.id}');
+      debugPrint('title: ${_item.title}');
+      debugPrint('category: ${_item.category}');
+      debugPrint('imageUrl: ${_item.imageUrl}');
+      debugPrint('description: ${_item.description}');
+      debugPrint('servings: ${_item.servings}');
+      debugPrint('ingredients count: ${_item.ingredients.length}');
+      debugPrint('instructions count: ${_item.instructions.length}');
+      debugPrint('rating: ${_item.rating}');
+      debugPrint('===========================');
+    }
   }
 
   @override
@@ -45,67 +97,203 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     super.dispose();
   }
 
+  void _submitReview() {
+    final text = _reviewController.text.trim();
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please write your review thoughts before submitting.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _userReviews.insert(0, {
+        'userName': 'You',
+        'rating': _selectedRating,
+        'comment': text,
+        'date': 'Just now',
+      });
+      _currentReviewCount++;
+      _currentRating = ((_currentRating * (_currentReviewCount - 1)) + _selectedRating) / _currentReviewCount;
+      _reviewController.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Thank you! Your review has been published.')),
+    );
+  }
+
+  void _startCookingWalkthrough(Recipe item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        int currentStep = 0;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final steps = item.instructions.isNotEmpty
+                ? item.instructions
+                : ['Prepare all fresh ingredients.', 'Follow cooking steps.', 'Enjoy your meal!'];
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.65,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Cooking: ${item.title}',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      Text(
+                        'Step ${currentStep + 1} of ${steps.length}',
+                        style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor: AppColors.primary,
+                            child: Text(
+                              '${currentStep + 1}',
+                              style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            steps[currentStep],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 16, color: AppColors.textPrimary, height: 1.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      if (currentStep > 0)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setModalState(() => currentStep--);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            ),
+                            child: const Text('Previous Step'),
+                          ),
+                        ),
+                      if (currentStep > 0) const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (currentStep < steps.length - 1) {
+                              setModalState(() => currentStep++);
+                            } else {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('🎉 Bon Appétit! You completed cooking this recipe!')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          ),
+                          child: Text(currentStep < steps.length - 1 ? 'Next Step' : 'Finish Cooking'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Recipe item = widget.recipe ??
-        ModalRoute.of(context)?.settings.arguments as Recipe? ??
-        Recipe(
-          id: '0',
-          title: 'Mexican Pizza',
-          description: 'Crispy tortilla pizza topped with seasoned beans, melted cheese, black olives, green onions, sour cream, and fresh diced tomatoes.',
-          imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80',
-          category: 'Dinner',
-          ingredients: [
-            'Tortilla Shells 2pcs',
-            'Refried Beans 150gm',
-            'Shredded Cheese 100gm',
-            'Diced Tomatoes 50gm',
-            'Sour Cream 2tbsp',
-          ],
-          instructions: [
-            'Crisp tortilla shells in oven at 200°C for 5 minutes.',
-            'Spread refried beans and shredded cheese over tortillas.',
-            'Bake until cheese is melted and bubbling.',
-            'Top with diced tomatoes, black olives, green onions, and sour cream.'
-          ],
-          cookingTime: 25,
-          calories: 140,
-          servings: 2,
-          difficulty: 'Easy',
-          rating: 0.0,
-          reviewCount: 0,
-          createdBy: 'Chef Mario',
-        );
-
     final authProvider = Provider.of<AuthProvider>(context);
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
-    final bool isFav = favoriteProvider.isFavorite(item.id);
+    final bool isFav = favoriteProvider.isFavorite(_item.id);
+
+    // Calculate scaled ingredients using model helper
+    final List<String> scaledIngredients = _item.getScaledIngredients(_servings);
+
+    final currentUid = authProvider.currentUserId;
+    final isOwner = currentUid != null &&
+        currentUid.isNotEmpty &&
+        (currentUid == _item.createdBy || _item.createdBy == 'You' || _item.createdBy.isEmpty);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Top Food Hero Image
+          // Top Food Hero Image with Loading/Error Handling
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.42,
-            child: Image.network(
-              item.imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: AppColors.primaryLight,
-                child: const Icon(Icons.restaurant, size: 80, color: Colors.white),
-              ),
-            ),
+            height: 280,
+            child: _item.imageUrl.trim().isEmpty
+                ? Container(
+                    color: AppColors.primaryLight,
+                    child: const Icon(Icons.restaurant, size: 80, color: Colors.white),
+                  )
+                : Image.network(
+                    _item.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: AppColors.primaryLight,
+                      child: const Icon(Icons.restaurant, size: 80, color: Colors.white),
+                    ),
+                  ),
           ),
 
-          // Top Header Back Button (Matching Reference Image 3)
+          // Top Header Back Button & Owner Action Buttons
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     decoration: const BoxDecoration(
@@ -117,14 +305,87 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
+                  if (isOwner)
+                    Row(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                            onPressed: () async {
+                              final updated = await Navigator.pushNamed(
+                                context,
+                                AppRoutes.addEditRecipe,
+                                arguments: _item,
+                              );
+                              if (updated is Recipe) {
+                                setState(() {
+                                  _item = updated;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  title: const Text('Delete Recipe?'),
+                                  content: Text('Are you sure you want to delete "${_item.title}"?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.error,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                      onPressed: () async {
+                                        final nav = Navigator.of(context);
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
+                                        final title = _item.title;
+
+                                        Navigator.pop(ctx);
+                                        await recipeProvider.deleteRecipe(_item.id);
+                                        messenger.showSnackBar(
+                                          SnackBar(content: Text('Deleted "$title"')),
+                                        );
+                                        nav.pop();
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
           ),
 
-          // Bottom Sheet Content Container (Matching Reference Images 1 & 3)
+          // Bottom Sheet Content Container
           Positioned.fill(
-            top: MediaQuery.of(context).size.height * 0.36,
+            top: 250,
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -151,14 +412,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Title & Category Badge Pill Row (Matching Reference Image 3)
+                          // Title & Category Badge Pill Row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Text(
-                                  item.title,
+                                  _item.title,
                                   style: const TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -173,7 +434,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Text(
-                                  item.category,
+                                  _item.category,
                                   style: const TextStyle(
                                     color: AppColors.primary,
                                     fontSize: 12,
@@ -185,9 +446,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                           const SizedBox(height: 10),
 
-                          // Description Text (Matching Reference Image 3)
+                          // Description Text
                           Text(
-                            item.description,
+                            _item.description,
                             style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary,
@@ -202,7 +463,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               const Icon(Icons.bolt_rounded, size: 16, color: AppColors.textSecondary),
                               const SizedBox(width: 4),
                               Text(
-                                '${item.calories} Cal',
+                                '${_item.calories} Cal',
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
@@ -215,7 +476,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               const Icon(Icons.access_time_rounded, size: 15, color: AppColors.textSecondary),
                               const SizedBox(width: 4),
                               Text(
-                                '${item.cookingTime} Min',
+                                '${_item.cookingTime} Min',
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
@@ -232,7 +493,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               const Icon(Icons.star_rounded, size: 18, color: AppColors.starRating),
                               const SizedBox(width: 4),
                               Text(
-                                item.rating > 0 ? '${item.rating.toStringAsFixed(1)}/5' : 'No ratings yet',
+                                _currentRating > 0 ? '${_currentRating.toStringAsFixed(1)}/5' : 'No ratings yet',
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -241,7 +502,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                item.reviewCount > 0 ? '(${item.reviewCount} Reviews)' : '(No reviews yet)',
+                                _currentReviewCount > 0 ? '($_currentReviewCount Reviews)' : '(No reviews yet)',
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
@@ -251,7 +512,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                           const SizedBox(height: 24),
 
-                          // Ingredients Header & Serving Counter (Matching Reference Image 3)
+                          // Ingredients Header & Interactive Serving Counter (Prevent Servings < 1)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -317,14 +578,29 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Ingredient List Items (Matching Reference Image 3)
-                          if (item.ingredients.isEmpty)
+                          // Dynamically Scaled Ingredient List Items using getScaledIngredients()
+                          if (scaledIngredients.isEmpty)
                             const Text('No ingredients listed.', style: TextStyle(color: AppColors.textSecondary))
                           else
-                            ...item.ingredients.map((ing) {
-                              final parts = ing.split(' ');
-                              final name = parts.length > 1 ? parts.sublist(0, parts.length - 1).join(' ') : ing;
-                              final weight = parts.length > 1 ? parts.last : '';
+                            ...scaledIngredients.map((ing) {
+                              String name = ing.trim();
+                              String qty = '';
+                              if (ing.contains(':')) {
+                                final parts = ing.split(':');
+                                name = parts[0].trim();
+                                qty = parts.sublist(1).join(':').trim();
+                              } else {
+                                final RegExp matchRegex = RegExp(r'^(.*?)\s+([\d\.]+\s*[A-Za-z%]+)$');
+                                final match = matchRegex.firstMatch(ing.trim());
+                                if (match != null) {
+                                  final g1 = match.group(1);
+                                  final g2 = match.group(2);
+                                  if (g1 != null && g1.trim().isNotEmpty) {
+                                    name = g1.trim();
+                                    qty = g2?.trim() ?? '';
+                                  }
+                                }
+                              }
 
                               return Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -342,7 +618,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     const SizedBox(width: 14),
                                     Expanded(
                                       child: Text(
-                                        name.isNotEmpty ? name : ing,
+                                        name,
                                         style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -351,7 +627,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       ),
                                     ),
                                     Text(
-                                      weight,
+                                      qty,
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: AppColors.textSecondary,
@@ -364,7 +640,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             }),
                           const SizedBox(height: 28),
 
-                          // Instructions Section Header (Matching Reference Image 1)
+                          // Instructions Section Header
                           const Text(
                             'Instructions',
                             style: TextStyle(
@@ -376,7 +652,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           const SizedBox(height: 14),
 
                           // Numbered Instructions List
-                          ...item.instructions.asMap().entries.map(
+                          ..._item.instructions.asMap().entries.map(
                                 (entry) => Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                                   child: Row(
@@ -385,7 +661,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       Container(
                                         width: 24,
                                         height: 24,
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           color: AppColors.badgeBackground,
                                           shape: BoxShape.circle,
                                         ),
@@ -417,7 +693,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               ),
                           const SizedBox(height: 28),
 
-                          // Reviews & Ratings Section Header (Matching Reference Image 1)
+                          // Reviews & Ratings Section Header
                           const Text(
                             'Reviews & Ratings',
                             style: TextStyle(
@@ -428,26 +704,55 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                           const SizedBox(height: 12),
 
-                          // Empty Reviews State Box
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: AppColors.background,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Text(
-                              'No reviews yet. Be the first to review this recipe!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
+                          // User Submitted Reviews List or Empty State Box
+                          if (_userReviews.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                            ),
-                          ),
+                              child: const Text(
+                                'No reviews yet. Be the first to review this recipe!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            )
+                          else
+                            ..._userReviews.map((rev) => Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(rev['userName'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                          Row(
+                                            children: List.generate(
+                                              rev['rating'],
+                                              (_) => const Icon(Icons.star_rounded, size: 14, color: AppColors.starRating),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(rev['comment'], style: const TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+                                    ],
+                                  ),
+                                )),
                           const SizedBox(height: 20),
 
-                          // Leave a Review Card (Matching Reference Image 1)
+                          // Leave a Review Card
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -509,12 +814,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      _reviewController.clear();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Thank you for your review!')),
-                                      );
-                                    },
+                                    onPressed: _submitReview,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       foregroundColor: Colors.white,
@@ -539,7 +839,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ),
                   ),
 
-                  // Fixed Bottom Action Bar: Start Cooking & Red Heart Button (Matching Reference Images 1 & 3)
+                  // Fixed Bottom Action Bar: Start Cooking & Red Heart Button
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                     decoration: BoxDecoration(
@@ -556,7 +856,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       children: [
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () => _startCookingWalkthrough(_item),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -599,7 +899,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             ),
                             onPressed: () {
                               final uid = authProvider.userModel?.uid ?? '';
-                              favoriteProvider.toggleFavorite(uid, item.id);
+                              favoriteProvider.toggleFavorite(uid, _item.id);
                             },
                           ),
                         ),
