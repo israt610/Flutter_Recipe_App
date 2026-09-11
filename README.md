@@ -1,10 +1,10 @@
-# 🍳 Recipe Hub — Modern Flutter & Firebase Cooking Companion
+#  Recipe Hub — Modern Flutter & Firebase Cooking Companion
 
 A beautifully crafted, modern **Flutter Recipe Application** built with **Firebase Authentication**, **Cloud Firestore**, and **Provider State Management**. The app provides culinary enthusiasts with an intuitive experience to discover, search, filter, scale ingredients, leave real-time reviews, save persistent favorites, and create custom recipes.
 
 ---
 
-## 📸 Screenshots Showcase
+##  Screenshots Showcase
 
 <p align="center">
   <img src="screenshots/home_screen.jpg" width="19%" alt="Home Discovery Screen" />
@@ -16,41 +16,41 @@ A beautifully crafted, modern **Flutter Recipe Application** built with **Fireba
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🔐 1. Firebase Authentication & User Profile
+###  1. Firebase Authentication & User Profile
 - **Secure Authentication**: Email & Password registration and login via Firebase Auth with validation and user-friendly error handling.
 - **User Profiles**: Live Firestore user profile creation and management (`users/{uid}`).
 - **Persistent Session State**: Maintains user authentication status seamlessly across application restarts.
 
-### 🏠 2. Dynamic Home & Discovery Dashboard
+###  2. Dynamic Home & Discovery Dashboard
 - **Promotional Hero Banner**: Highlights featured cooking recipes with an interactive "Explore" call-to-action button.
 - **Category Chips**: Quick category navigation (`All`, `Dinner`, `Lunch`, `Breakfast`, `Dessert`, `Snack`, `Vegetarian`).
 - **Interactive Recipe Grid**: Displays recipes dynamically with real-time state updates.
 - **Notifications Dialog**: Built-in modal dialog for recent recipe updates and notifications.
 
-### 🔍 3. Real-Time Search & Multi-Level Filtering
+###  3. Real-Time Search & Multi-Level Filtering
 - **Dynamic Live Search**: Instant case-insensitive filtering by recipe title or description text.
 - **Category & Attribute Filter**: Dynamically filter recipes by meal category, cook time limits, and difficulty levels.
 - **Empty State Handler**: Clean visual feedback with a "Clear Filters" action when no recipes match search criteria.
 
-### 📖 4. Interactive Recipe Details & Ingredient Scaler
+###  4. Interactive Recipe Details & Ingredient Scaler
 - **Collapsible Hero Banner**: Responsive collapsible image app bar (`SliverAppBar`).
 - **Serving Quantity Adjuster**: Interactive `- 1 +` buttons that dynamically calculate scaled ingredient quantities in real time.
 - **Interactive Cooking Walkthrough**: Step-by-step modal guide (`Start Cooking`) for hassle-free cooking.
 - **Review & Rating System**: Real-time review submission form with star rating selector and average rating calculation.
 
-### 💖 5. Persistent Favorites Management
+###  5. Persistent Favorites Management
 - **Firestore Persistence**: User favorites synced live to Cloud Firestore (`users/{uid}` -> `favorites`), ensuring saved recipes persist across devices and logins.
 - **Single-Column Clean List**: Clean horizontal cards with calorie/time metadata and instant one-tap removal.
 
-### ➕ 6. Custom Recipe Management (CRUD)
+###  6. Custom Recipe Management (CRUD)
 - **Create Custom Recipe**: Add new recipes complete with category, prep time, calories, ingredients, and step-by-step instructions.
 - **Edit & Delete**: Full control for recipe creators to edit or delete their published recipes.
 
 ---
 
-## 🛠️ Tech Stack & Dependencies
+##  Tech Stack & Dependencies
 
 | Layer | Technology |
 |---|---|
@@ -62,7 +62,7 @@ A beautifully crafted, modern **Flutter Recipe Application** built with **Fireba
 
 ---
 
-## 📂 Project Architecture & Directory Layout
+##  Project Architecture & Directory Layout
 
 ```text
 flutter_recipe/
@@ -110,7 +110,7 @@ flutter_recipe/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Prerequisites
 - **Flutter SDK**: `>=3.0.0`
@@ -147,7 +147,7 @@ flutterfire configure
 
 ---
 
-## 🧪 Testing & Code Quality
+##  Testing & Code Quality
 
 Run static code analysis:
 ```bash
