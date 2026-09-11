@@ -108,56 +108,8 @@ flutter_recipe/
     └── widget_test.dart       # Unit & Widget test suite
 ```
 
----
 
-##  Getting Started
 
-### 1. Prerequisites
-- **Flutter SDK**: `>=3.0.0`
-- **Dart SDK**: `>=3.0.0`
-- **Git**
-
-### 2. Installation
-```bash
-# Clone the repository
-git clone https://github.com/israt610/Flutter_Recipe_App.git
-
-# Navigate to the project directory
-cd Flutter_Recipe_App
-
-# Install dependencies
-flutter pub get
-```
-
-### 3. Firebase Configuration
-Ensure your `firebase_options.dart` file is properly configured with your Firebase credentials or run:
-```bash
-flutterfire configure
-```
-
-### 4. Running the Application
-- **Run on Web**:
-  ```bash
-  flutter run -d chrome
-  ```
-- **Run on Android / iOS**:
-  ```bash
-  flutter run
-  ```
-
----
-
-##  Testing & Code Quality
-
-Run static code analysis:
-```bash
-flutter analyze
-```
-
-Run test suite:
-```bash
-flutter test
-```
 
 
 
